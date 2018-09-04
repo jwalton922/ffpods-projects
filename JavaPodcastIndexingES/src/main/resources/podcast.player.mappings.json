@@ -1,0 +1,45 @@
+{ 
+
+    "properties": {   
+        "player": {
+            "type": "text",
+            "fields": {
+                "raw": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "podcast": {
+            "type": "text",
+            "fields": {
+                "raw": {
+                    "type": "keyword"
+                }
+            }
+        }, 
+        "episodeTitle": {
+            "type": "text",
+            "fields": {
+                "raw": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "episodeDate": {
+            "type": "date"
+        },
+        "clipStartTime": {
+            "type": "integer"
+        }, 
+        "clipEndTime": {
+            "type": "integer"
+        }, 
+        "clipText": {
+            "type": "text"
+        },
+        "created": {
+            "type": "date", 
+            "format": "strict_date_optional_time||epoch_millis"
+        }
+    }
+}

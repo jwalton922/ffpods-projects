@@ -4,10 +4,12 @@ import './main.css';
 import InputRange from 'react-input-range';
 import 'react-input-range/lib/css/index.css';
 const {PlayPause, MuteUnmute, CurrentTime, Progress, SeekBar, Duration, Volume, Fullscreen} = controls;
+console.debug("Media Player?");
 class MediaPlayer extends Component {
     constructor(props) {
         super(props);
-
+        console.log("constructor in media player",{});
+        
         this.state = {
 
             players: [
@@ -30,14 +32,32 @@ class MediaPlayer extends Component {
             ]
         }
     }
+
+    componentDidMount(e) {
+        console.log("Component did mount");       
+         fetch('http://localhost:3001/playerClips')
+                .then(function (response) {
+                    console.log("Resposne",response);
+                    return response.json();
+                }).then(function (response) {
+                    console.log("Response2",response);
+                });
+    }
     
-    handleInputRangeChange(index,value){
-        console.log("Changing index",index,value);
+    componentDidUpdate(a,b) {
+        console.log("Component did update",a,b);
+       
+
+    }
+
+    handleInputRangeChange(index, value) {
+        console.log("Changing index", index, value);
+        console.log("Updated te index too",index);
         //this is bad to do in react but...
         this.state.players[index].value = value;
-        this.setState({player:this.state.players});
+        this.setState({player: this.state.players});
     }
-            render() {
+    render() {
         return (
                 <Media>
                     <div className="media-player-wrapper">
@@ -54,18 +74,18 @@ class MediaPlayer extends Component {
                                 </div>
                 
                                 {this.state.players.map((player, i) =>
-                                    <div key={i} className="media-control-group media-control-group--seek">                                                                                                                                                                       
-                                        <h5 className="player-name">{player.name} {i}</h5>
-                                        <InputRange                                               
-                                            maxValue={3639}
-                                            minValue={0}
-                                            value={player.value}
-                                            onChange={value => this.handleInputRangeChange(i,value)}
-                                            />
-                                    </div>
+                                        <div key={i} className="media-control-group media-control-group--seek">                                                                                                                                                                       
+                                            <h5 className="player-name">{player.name} {i}</h5>
+                                            <InputRange                                               
+                                                maxValue={3639}
+                                                minValue={0}
+                                                value={player.value}
+                                                onChange={value => this.handleInputRangeChange(i, value)}
+                                                />
+                                        </div>
 
 
-                                 )}
+                                            )}
                 
                 
                                 <div className="media-row">
@@ -82,8 +102,8 @@ class MediaPlayer extends Component {
                     </div>
                 
                 </Media>
-                            )
-                }
-            }
+                )
+    }
+}
 
-            export default MediaPlayer;
+export default MediaPlayer;
