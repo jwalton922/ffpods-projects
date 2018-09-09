@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-
 import './App.css';
 import MediaPlayer from './MediaPlayer';
 class App extends Component {

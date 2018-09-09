@@ -47,22 +47,28 @@ public class PlayerClipFinder {
     }
 
     public List<String> getPlayerNames() {
-        List<String> playersToQuery = Arrays.asList(
-                "Andrew Luck",
-                "Julio Jones",
-                "Leonard Fournette",
-                "Greg Olsen",
-                "Jarvis Landry",
-                "Chris Carson",
-                "Michael Crabtree",
-                "Alshon Jeffery",
-                "Isaiah Crowell",
-                "Rashaad Penny",
-                "Marvin Jones",
-                "Alvin Kamara",
-                "Saints Defense"
-        );
-
+//        List<String> playersToQuery = Arrays.asList(
+//                "Andrew Luck",
+//                "Julio Jones",
+//                "Leonard Fournette",
+//                "Greg Olsen",
+//                "Jarvis Landry",
+//                "Chris Carson",
+//                "Michael Crabtree",
+//                "Alshon Jeffery",
+//                "Isaiah Crowell",
+//                "Rashaad Penny",
+//                "Marvin Jones",
+//                "Alvin Kamara",
+//                "Saints Defense"
+//        );
+        PlayerParser parser = new PlayerParser();
+        List<String> playersToQuery = null;
+        try {
+            playersToQuery = parser.getPlayers();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         return playersToQuery;
     }
 
@@ -95,6 +101,7 @@ public class PlayerClipFinder {
         jsonMap.put("clipStartTime", clipStartTime);
         jsonMap.put("clipEndTime", clipEndTime);
         jsonMap.put("clipText", clipText);
+        jsonMap.put("player", playerName);
         request.source(jsonMap);
         try {
             client.index(request, RequestOptions.DEFAULT);

@@ -14,15 +14,17 @@ app.get('/playerClips', (req, res) => {
     client.search({
         index: 'player_clips',
         type: 'playerClips',
+        from: 0,
+        size: 1000,
         body: {
             query: {
-                match_all: {                    
+                match_all: {
                 }
             }
         }
     }).then(function (resp) {
         var hits = resp.hits.hits;
-        console.log("Received hits",hits);
+        console.log("Received hits", hits);
         res.send(hits);
     }, function (err) {
         console.trace(err.message);
