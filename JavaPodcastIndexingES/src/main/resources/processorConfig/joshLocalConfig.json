@@ -1,0 +1,8 @@
+{
+    "audioRootFolder": "/Users/jwalton/Music/iTunes/iTunes Media/Podcasts/",
+    "textRootFolder": "/Users/jwalton/Downloads/podcastText/" ,
+    "s3OutputBucket": "ff-pods",
+    "s3OutputKeyPrefix": "playerClips/",    
+    "localOutputDir": "/Users/jwalton/playerClips/"
+}
+

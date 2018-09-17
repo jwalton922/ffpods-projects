@@ -1,0 +1,20 @@
+{ 
+
+    "properties": {   
+        "player": {
+            "type": "text",
+            "fields": {
+                "raw": {
+                    "type": "keyword"
+                }
+            }
+        },
+        "position": {
+            "type": "keyword"
+        }, 
+        "team": {
+            "type": "keyword"
+        }
+    }
+}
+

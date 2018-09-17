@@ -5,6 +5,7 @@
  */
 package com.ffpods.podcastindex;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -32,18 +33,21 @@ public class PodcastTextIndexer {
 
     private static ObjectMapper mapper = new ObjectMapper();
     private RestHighLevelClient client;
-    private String esHost = "localhost";
+    private String esHost = "https://search-ff-pods-public-vv3efpstye2a2lvyj72jjznxqm.us-west-2.es.amazonaws.com";//"localhost";
 
     public PodcastTextIndexer() throws Exception {
         init();
     }
 
     private void init() throws Exception {
+        if(esHost.equals("localhost")){
         client = new RestHighLevelClient(
                 RestClient.builder(
                         new HttpHost(esHost, 9200, "http"),
                         new HttpHost(esHost, 9201, "http")));
-
+        } else {
+            client = ElasticsearchServiceUtil.esClient(esHost, "us-west-2", new DefaultAWSCredentialsProviderChain());
+        }
         try {
             //create index for podcasts, two document types
             //One document type for podcast text
@@ -100,22 +104,21 @@ public class PodcastTextIndexer {
         client.index(request, RequestOptions.DEFAULT);
     }
 
-    private void shutDown() {
+    public void shutDown() {
         try {
             client.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-
-    public void indexFile(String file, String podcastName, String episodeName) throws IOException {
-        InputStream stream = new FileInputStream(file);
-
+    
+    public void indexFile(InputStream stream, String podcastName, String episodeName) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
         String line = null;
         String timeStamp = "0:00:00";
         String textToIndex = "";
         int blockId = 0;
+        String idPrefix =  podcastName+"."+episodeName+".";
         while ((line = br.readLine()) != null) {
             String[] lineSplit = line.split("\\s+");
             if (lineSplit.length == 1) {
@@ -131,7 +134,7 @@ public class PodcastTextIndexer {
             //empty line
             //repeat
             if (line.isEmpty()) {
-                writeToES(timeStamp, textToIndex, file+"."+blockId,podcastName, episodeName);
+                writeToES(timeStamp, textToIndex,idPrefix+blockId,podcastName, episodeName);
                 blockId++;
                 textToIndex = "";
                 System.out.println("Processed block " + blockId);
@@ -139,15 +142,19 @@ public class PodcastTextIndexer {
             textToIndex += line;
 
         }
-        writeToES(timeStamp, textToIndex, file+"."+blockId,podcastName,episodeName);
+        writeToES(timeStamp, textToIndex, idPrefix+"."+blockId,podcastName,episodeName);
         blockId++;
         System.out.println("Processed block " + blockId);
+    }
 
+    public void indexFile(String file, String podcastName, String episodeName) throws IOException {
+        InputStream stream = this.getClass().getResourceAsStream(file);
+        indexFile(stream, podcastName, episodeName);        
     }
 
     public static void main(String[] args) throws Exception {
         PodcastTextIndexer test = new PodcastTextIndexer();
-        test.indexFile("/Users/jwalton/Downloads/podcastText/goodVibes.text", "FantasyFootballers", "Good Vibes");
+        test.indexFile("/podcastText/goodVibes.text", "FantasyFootballers", "Good Vibes");
         test.shutDown();
     }
 }

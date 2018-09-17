@@ -10,8 +10,10 @@ package com.ffpods.podcastindex;
  * @author jwalton
  */
 public class Constants {
+    public static final String PLAYER_DOCUMENT_TYPE = "player";
     public static final String PODCAST_TEXT_DOCUMENT_TYPE = "podcastText";
     public static final String PLAYER_CLIPS_DOCUMENT_TYPE = "playerClips";
     public static final String PODCAST_TEXT_INDEX_NAME = "podcasts";
     public static final String PLAYER_CLIPS_INDEX_NAME = "player_clips";
+    public static final String PLAYER_LIST_INDEX_NAME = "player_list";
 }

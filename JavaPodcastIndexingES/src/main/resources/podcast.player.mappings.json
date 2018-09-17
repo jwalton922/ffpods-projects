@@ -1,6 +1,9 @@
 { 
 
-    "properties": {   
+    "properties": { 
+        "s3Location": {
+            "type": "keyword"
+        },
         "player": {
             "type": "text",
             "fields": {
