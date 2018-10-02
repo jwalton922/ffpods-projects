@@ -12,13 +12,11 @@ import com.ffpods.podcastindex.data.Player;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.apache.http.HttpHost;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
@@ -135,6 +133,40 @@ public class PlayerParser {
       
     }
     
+    public void writeOutPlayerNames() throws Exception {
+        List<Player> players = getPlayers();
+        PrintWriter pw = new PrintWriter("/Users/jwalton/players.txt");
+        for(Player player : players){
+            String output = player.getName()
+                    .replaceAll("II", "")
+                    .replaceAll("Jr.", "")
+                    .replaceAll("D/ST", "")
+                    .replaceAll("Sr.", "")
+                    .replaceAll("St.", "")
+                    .replaceAll("'","")
+                   
+                    .trim().replaceAll("\\s+", "-") .replaceAll("\\.-", ".\n");
+            pw.println(output);
+            pw.flush();
+        }
+        
+        pw.flush();
+        pw.close();
+        this.client.close();
+    }
+    
+    /**
+     * Use this to put in S3 so lambda that uses transcribe output can match against player names
+     * @throws Exception 
+     */
+    public void playerToJsonFile() throws Exception {
+        String outputFile = "/Users/jwalton/nfl_players.json";
+        List<Player> players = getPlayers();
+        for(Player player : players){
+            player.getName().replaceAll("", "-");
+        }
+    }
+    
     
     
     public static void main(String[] args) throws Exception {
@@ -142,6 +174,7 @@ public class PlayerParser {
         config.setHost("https://search-ff-pods-public-vv3efpstye2a2lvyj72jjznxqm.us-west-2.es.amazonaws.com");
         PlayerParser parser = new PlayerParser(config);
         parser.createPlayerIndex();
-        parser.indexPlayers();
+//        parser.indexPlayers();
+        parser.writeOutPlayerNames();
     }
 }

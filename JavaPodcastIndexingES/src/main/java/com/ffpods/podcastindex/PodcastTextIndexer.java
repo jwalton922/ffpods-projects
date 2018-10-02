@@ -154,7 +154,7 @@ public class PodcastTextIndexer {
 
     public static void main(String[] args) throws Exception {
         PodcastTextIndexer test = new PodcastTextIndexer();
-        test.indexFile("/podcastText/goodVibes.text", "FantasyFootballers", "Good Vibes");
+//        test.indexFile("/podcastText/goodVibes.text", "FantasyFootballers", "Good Vibes");
         test.shutDown();
     }
 }

@@ -1,0 +1,20 @@
+{
+  "name": "podcast_rss_reader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.325.0",
+    "elasticsearch": "^15.1.1",
+    "http-aws-es": "^6.0.0",
+    "install": "^0.12.1",
+    "npm": "^6.4.1",
+    "rss-parser": "^3.4.3",
+    "streaming-s3": "^0.4.4"
+  }
+}
