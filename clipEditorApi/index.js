@@ -1,15 +1,15 @@
-const express = require('express')
-var cors = require('cors')
-var bodyParser = require('body-parser')
+const express = require('express');
+var cors = require('cors');
+var bodyParser = require('body-parser');
 // create application/json parser
-var jsonParser = bodyParser.json()
-
-const app = express()
+var jsonParser = bodyParser.json();
+const fetch = require("node-fetch");
+const app = express();
 const awsServerlessExpressMiddleware = require('aws-serverless-express/middleware')
-app.use(awsServerlessExpressMiddleware.eventContext())
+app.use(awsServerlessExpressMiddleware.eventContext());
 
 //probably should remove tis at some point...
-app.use(cors())
+app.use(cors());
 var elasticsearch = require('elasticsearch');
 let AWS = require('aws-sdk');
 var chain = new AWS.CredentialProviderChain();
@@ -39,8 +39,8 @@ app.get('/playerSearch', (req, res) => {
         type: 'player',
         body: {
             query: {
-                match_phrase: {
-                    name: name
+                wildcard: {
+                    name: name + '*'
                 }
             }
         }
@@ -53,6 +53,31 @@ app.get('/playerSearch', (req, res) => {
     });
 });
 
+app.post('/getLink', jsonParser, async (req, res) => {
+    if (req.body.url) {
+        console.log("getting link for url: " + req.body.url);
+        if (req.body.url.indexOf('https://www.ffpodcastsearch.com') !== 0 &&
+            req.body.url.indexOf('https://www.fspodcastsearch.com') !== 0
+        ) {
+            throw new Error("Invalid domain");
+        }
+        var encodedUrl = encodeURIComponent(req.body.url);
+        var bityAuthToken = '859898adba9c88a815b2401086f1b27b8362808f';
+        var bitlyUrl = 'https://api-ssl.bitly.com/v3/shorten?access_token=' + bityAuthToken + "&longUrl=" + encodedUrl;
+        try {
+            const response = await fetch(bitlyUrl);
+            const json = await response.json();
+            console.log('bitly response', json);
+            res.send(json.data);
+        } catch (error) {
+            console.log(error);
+            res.send({ url: 'error' });
+        }
+    } else {
+        res.send({ url: 'error' });
+    }
+});
+
 app.post('/playerClips', jsonParser, (req, res) => {
     var promise;
     console.log("Request body", req.body);
@@ -62,6 +87,10 @@ app.post('/playerClips', jsonParser, (req, res) => {
         for (var i = 0; i < players.length; i++) {
             shouldQueries.push({ term: { "player.raw": players[i] } });
         }
+        var currentDate = new Date();
+        var minDate = new Date();
+        minDate.setTime(currentDate - (4 * 24 * 3600 * 1000));
+        console.log("Min date: " + minDate.getTime);
         promise = client.search({
             index: 'player_clips',
             type: 'playerClips',
@@ -70,7 +99,35 @@ app.post('/playerClips', jsonParser, (req, res) => {
             body: {
                 query: {
                     bool: {
-                        should: shouldQueries
+                        must: [
+                            { bool: { should: shouldQueries } }],
+                        filter: {
+                            range: {
+                                publishDate: {
+                                    gte: minDate.getTime()
+                                }
+                            }
+                        }
+                    }
+                },
+                sort: [
+                    { "pubDate.keyword": "desc" },
+                    { "podcast.raw": "desc" },
+                    { "clipStartTime": "asc" },
+                    "_score"
+                ],
+            }
+        });
+    } else if (req.body.id) {
+        promise = client.search({
+            index: 'player_clips',
+            type: 'playerClips',
+            from: 0,
+            size: 20,
+            body: {
+                query: {
+                    ids: {
+                        values: [req.body.id]
                     }
                 }
             }
@@ -98,6 +155,6 @@ app.post('/playerClips', jsonParser, (req, res) => {
     });
 });
 //only for local...figure out how to switch on env
-//app.listen(3001, () => console.log('Example app listening on port 3001!'))
+// app.listen(3001, () => console.log('Example app listening on port 3001!'))
 
-module.exports = app
+module.exports = app;

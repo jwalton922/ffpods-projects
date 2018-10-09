@@ -105,8 +105,9 @@ exports.handler = async (event) => {
                 console.log("Item: ",item);
                 var clipStartTime = Math.round(parseFloat(item.start_time))-5;
                 var clipEndTime = clipStartTime+30;                
-                var clipText = [text];
-                for(var z = j; z >= 0; z--){                    
+                var clipText = [matchingPlayer.name];
+                //check earlier words until we are before clipStartTime
+                for(var z = j-1; z >= 0; z--){                    
                     var earlierItem = items[z];
                     if(earlierItem.type !== 'pronunciation'){
                         continue;
@@ -118,7 +119,8 @@ exports.handler = async (event) => {
                     var earlierText = earlierItem.alternatives[0].content;
                     clipText.unshift(earlierText);
                 }
-                for(var z = j; z < items.length; z++){                    
+                //check later words until we after clipEndTime
+                for(var z = j+1; z < items.length; z++){                    
                     var laterItem = items[z];
                     if(laterItem.type !== 'pronunciation'){
                         continue;
@@ -130,7 +132,8 @@ exports.handler = async (event) => {
                     var laterText = laterItem.alternatives[0].content;
                     clipText.push(laterText);
                 }
-                var date= new Date();
+                var date= new Date(matchingItem.pubDate);
+                var processDate = new Date();
                 var playerClip = {
                     podcast: podcast.name,
                     episodeTitle: matchingItem.title,
@@ -140,7 +143,9 @@ exports.handler = async (event) => {
                     player: matchingPlayer.name,
                     clipUrl: matchingItem.enclosure.url,
                     pubDate: matchingItem.pubDate,
-                    currentDate: date.getTime()
+                    publishDate: date.getTime(),
+                    currentDate: processDate.getTime(),
+                    image: feed.image.url
                 };
                 console.log("Output clip",playerClip);
                 numClips++;

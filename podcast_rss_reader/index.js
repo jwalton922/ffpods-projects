@@ -34,6 +34,9 @@ exports.rssHandler = function (event, context, callback) {
     async function readRSS(podcast, finishedCallback) {
 
         let feed = await parser.parseURL(podcast.url);
+        // console.log("Feed",feed);
+        console.log("Image",feed.image);
+        console.log("Image URL: ",feed.image.url);
         console.log(feed.title);
         var item = feed.items[0];
         console.log('Title: ' + item.title + ' value:' + item.link + " pub date: " + item.pubDate);
