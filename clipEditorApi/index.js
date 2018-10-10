@@ -78,6 +78,70 @@ app.post('/getLink', jsonParser, async (req, res) => {
     }
 });
 
+app.get('/latestEpisodes', (req, res) => {
+    promise = client.search({
+        index: 'player_clips',
+        type: 'playerClips',
+        size: 0,
+        body: {
+            aggs: {
+                podcast: {
+                    terms: {
+                        field: "podcast.raw"
+                    },
+                    aggregations: {
+                        episode: {
+                            terms: {
+                                field: "episodeTitle.raw"
+                            }, aggregations: {
+                                publishDate: {
+                                    terms: {
+                                        field: "publishDate"
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    });
+
+    promise.then(function (resp) {
+        // console.log("Received response", resp);
+        var podcasts = {};
+        var podcastBuckets = resp.aggregations.podcast.buckets;
+        // console.log("Podcast: ",resp.aggregations.podcast);
+        for (var i = 0; i < podcastBuckets.length; i++) {
+            var bucket = podcastBuckets[i];
+            var podcast = bucket.key;
+            var episodeBuckets = bucket.episode.buckets;
+            for (var j = 0; j < episodeBuckets.length; j++) {
+                var episodeBucket = episodeBuckets[j];
+                var epiode = episodeBucket.key;
+                // console.log("Episode bucket",episodeBucket);
+                if(!episodeBucket.publishDate || !episodeBucket.publishDate.buckets ||!episodeBucket.publishDate.buckets[0]){
+                    continue;
+                }
+                var publishDate = episodeBucket.publishDate.buckets[0].key
+                console.log("Publishd date: ",publishDate);
+                if (!podcasts[podcast]) {
+                    podcasts[podcast] = { podcast: podcast, episode: epiode, publishDate: publishDate };
+                } else {
+                    if (publishDate > podcasts[podcast].publishDate) {
+                        podcasts[podcast] = { podcast: podcast, episode: epiode, publishDate: publishDate };
+                    }
+                }
+            }
+        }
+       
+        res.send(podcasts);
+    }, function (err) {
+        console.trace(err.message);
+    });
+});
+
 app.post('/playerClips', jsonParser, (req, res) => {
     var promise;
     console.log("Request body", req.body);
@@ -115,7 +179,7 @@ app.post('/playerClips', jsonParser, (req, res) => {
                     { "podcast.raw": "desc" },
                     { "clipStartTime": "asc" },
                     "_score"
-                ],
+                ]
             }
         });
     } else if (req.body.id) {
@@ -142,7 +206,13 @@ app.post('/playerClips', jsonParser, (req, res) => {
                 query: {
                     match_all: {
                     }
-                }
+                },
+                sort: [
+                    { "pubDate.keyword": "desc" },
+                    { "podcast.raw": "desc" },
+                    { "clipStartTime": "asc" },
+                    "_score"
+                ]
             }
         });
     }
@@ -155,6 +225,6 @@ app.post('/playerClips', jsonParser, (req, res) => {
     });
 });
 //only for local...figure out how to switch on env
-// app.listen(3001, () => console.log('Example app listening on port 3001!'))
+app.listen(3001, () => console.log('Example app listening on port 3001!'))
 
 module.exports = app;

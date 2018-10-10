@@ -9,7 +9,7 @@ import Landing from './Landing';
 import NavBar from './NavBar';
 import createHistory from 'history/createBrowserHistory';
 import ReactGA from 'react-ga';
-
+import ComingSoon from './ComingSoon';
 ReactGA.initialize('UA-126876930-1');
 var history = createHistory();
 history.listen(function (location) {
@@ -23,6 +23,9 @@ const RoutedApp = () => (
             <div className="container">
                 <Route exact path="/" component={Landing} />
                 <Route path="/football" component={App} />
+                <Route path="/basketball" component={ComingSoon} />
+                <Route path="/soccer" component={ComingSoon} />
+                <Route path="/baseball" component={ComingSoon} />
             </div>
         </div>
     </Router>

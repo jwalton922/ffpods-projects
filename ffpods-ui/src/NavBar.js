@@ -3,7 +3,7 @@ import {
     Link
 } from 'react-router-dom';
 class NavBar extends Component {
-    render(){
+    render() {
         return (
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
                 <div className="container">
@@ -13,23 +13,23 @@ class NavBar extends Component {
                     </button>
                     <div className="collapse navbar-collapse" id="navbarResponsive">
                         <ul className="navbar-nav ml-auto">
-                            <li  className="nav-item">
+                            <li className="nav-item">
                                 <Link className="nav-item nav-link" to="/">Home
                 <span className="sr-only">(current)</span>
                                 </Link>
                             </li>
                             <li className="nav-item">
-                            <Link className="nav-link" to="/football">Football</Link>
-                            
+                                <Link className="nav-link" to="/football">Football</Link>
+
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link" href="#">Basketball</a>
+                                <Link className="nav-link" to="/basketball">Basketball</Link>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link" href="#">Soccer</a>
+                                <Link className="nav-link" to="/soccer">Soccer</Link>
                             </li>
                             <li className="nav-item">
-                                <a className="nav-link" href="#">Baseball</a>
+                                <Link className="nav-link" to="/baseball">Baseball</Link>
                             </li>
                         </ul>
                     </div>

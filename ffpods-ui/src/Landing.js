@@ -8,16 +8,71 @@ import {
 import ReactGA from 'react-ga';
 var Carousel = require('react-responsive-carousel').Carousel;
 ReactGA.initialize('UA-126876930-1');
-ReactGA.pageview(window.location.pathname + window.location.search);
+
 class Landing extends Component {
     constructor(props) {
         super(props);
+        // var api_host = 'http://localhost:3001/';
+        var api_host = 'https://jrgrhzrkpb.execute-api.us-west-2.amazonaws.com/prod/';
         var sportOptions = [
             { name: "Football", route: "football" },
             { name: "Basketball", route: "basketball" }
         ]
         this.state = {
-            sportOptions: sportOptions
+            sportOptions: sportOptions,
+            apiHost: api_host,
+            latestEpisodes: [],
+            podcasts: [
+                { name: "Fantasy Focus Football", img: "http://a.espncdn.com/combiner/i?img=i/espnradio/podcast/FantasyFocusFootball/FantasyFocusFootball_1400x1400.jpg" },
+                { name: "Fantasy Footballers - Fantasy Football Podcast", img: "https://ssl-static.libsyn.com/p/assets/7/a/2/3/7a239cc67a06dbd1/fantasyfootball.jpg" }
+            ],
+            displayedPodcast: { legend: "" },
+            currentDisplayIndex: 0
+        }
+    }
+    componentDidMount() {
+        var landing = this;
+        fetch(this.state.apiHost + 'latestEpisodes')
+            .then(function (response) {
+                return response.json();
+            }).then(function (response) {
+                console.log("Latest Episode Response", response);
+                var latestEpisodes = [];
+                for (var podcast in response) {
+                    var date = new Date(0);
+                    date.setTime(response[podcast].publishDate);
+                    for (var i = 0; i < landing.state.podcasts.length; i++) {
+                        if (landing.state.podcasts[i].name === podcast) {
+                            var legend = date.toISOString().split('T')[0] + ' ' + response[podcast].episode;
+                            latestEpisodes.push({ legend: legend, episode: response[podcast].episode, date: date.toISOString().split('T')[0] });
+                        }
+                    }
+                }
+                console.log("Latest episodes", latestEpisodes);
+                landing.setState({ latestEpisodes: latestEpisodes, displayedPodcast: latestEpisodes[landing.state.currentDisplayIndex] });
+                var retList = [];
+                // ReactGA.event({
+                //     category: 'Ep',
+                //     action: 'SearchResult',
+                //     label: 'Player',
+                //     value: response.length
+
+                // });
+                // for (var i = 0; i < response.length; i++) {
+                //     retList.push(response[i]._source.name.trim());
+                // }
+                // console.log("search return list: ", retList);
+                // search.setState({ options: retList, isLoading: false })
+            });
+    }
+    _carouselChange(e,arg) {
+        // console.log("Carousel change", e);
+        // console.log("Carousel second arg",arg);
+        if (this.state.latestEpisodes) {
+            this.setState({ displayedPodcast: this.state.latestEpisodes[e],currentDisplayIndex: e });
+            
+        } else {
+            this.setState({currentDisplayIndex: e})
         }
     }
     render() {
@@ -55,16 +110,16 @@ class Landing extends Component {
                                 </div>
                             </div>
                             <div className="col-sm-4 offset-sm-1">
-                                <Carousel showArrows={true} showThumbs={false} autoPlay={true} infiniteLoop={true} interval={3000}>
-                                    <div>
-                                        <img src="http://a.espncdn.com/combiner/i?img=i/espnradio/podcast/FantasyFocusFootball/FantasyFocusFootball_1400x1400.jpg" />
-                                        <p className="legend">Fantasy Football Focus</p>
-                                    </div>
-                                    <div>
-                                        <img src="https://ssl-static.libsyn.com/p/assets/7/a/2/3/7a239cc67a06dbd1/fantasyfootball.jpg" />
-                                        <p className="legend">The Fantasy Footballers</p>
-                                    </div>
+                                <Carousel selectedItem={this.state.currentDisplayIndex} showArrows={true} showThumbs={false} autoPlay={true} infiniteLoop={true} interval={3000} onChange={this._carouselChange.bind(this)}>
+                                    {this.state.podcasts.map((podcast, index) =>
+                                        <div key={index}>
+                                            <img src={podcast.img} />
+                                            <p className="legend">{podcast.name}</p>
+                                        </div>
+                                    )}
                                 </Carousel>
+                                <p>Latest Episode: <span>{this.state.displayedPodcast.legend}</span></p>
+
                             </div>
                         </div>
 
@@ -82,7 +137,7 @@ class Landing extends Component {
                                         10 hours of content and growing!</p>
                                 </div>
                                 <div className="card-footer">
-                                <Link className="btn btn-primary" to="/football">Football</Link>
+                                    <Link className="btn btn-primary" to="/football">Football</Link>
                                 </div>
                             </div>
                         </div>
@@ -135,7 +190,8 @@ class Landing extends Component {
 
                 <footer className="py-5 bg-dark">
                     <div className="container">
-                        <p className="m-0 text-center text-white">Copyright &copy; Your Website 2018</p>
+                    <p className="m-0 text-center"><a href="mailto:admin@ffpodcastsearch.com">Contact us</a></p>
+                        <p className="m-0 text-center text-white">Copyright &copy; ffpodcastsearch.com 2018</p>
                     </div>
 
                 </footer>
