@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import Footer from './Footer';
 import NavBar from './NavBar';
 import Search from './components/search/Search.js';
 import MediaPlayer from './components/mediaPlayer/MediaPlayer.js';
@@ -15,6 +16,7 @@ class App extends Component {
     var api_host = 'https://jrgrhzrkpb.execute-api.us-west-2.amazonaws.com/prod/';
     this.state = {
       currentTrack: { src: "" },
+      currentIndex: 0,
       tracks: [],
       playerClips: [],
       apiHost: api_host,
@@ -23,18 +25,21 @@ class App extends Component {
   }
 
   _findCurrentTrackIndex = () => {
-    var currentIndex = -1;
-    for (var i = 0; i < this.state.tracks.length; i++) {
-      var track = this.state.tracks[i];
-      if (track.src === this.state.currentTrack.src) {
-        currentIndex = i;
-        break;
-      }
-    }
-    return currentIndex;
+    return this.state.currentIndex;
+    //not sure why i had a method for this instead of state property...
+    // var currentIndex = -1;
+    // for (var i = 0; i < this.state.tracks.length; i++) {
+    //   var track = this.state.tracks[i];
+    //   if (track.src === this.state.currentTrack.src) {
+    //     currentIndex = i;
+    //     break;
+    //   }
+    // }
+    // return currentIndex;
   }
   _setTrackToIndex = (index) => {
     var trackToSet = { src: "", label: "" }
+    this.setState({ currentIndex: index });
     if (index < 0) {
       //no match      
       this.setState({ currentTrack: trackToSet });
@@ -42,7 +47,7 @@ class App extends Component {
     }
     if (index >= this.state.tracks.length) {
       //end of play list
-      this.setState({ currentTrack: trackToSet });
+      this.setState({ currentTrack: 0 });
     } else if (index < 0) {
       //hitting previous at first track
       this.setState({ currentTrack: trackToSet });
@@ -54,6 +59,10 @@ class App extends Component {
     var currentIndex = this._findCurrentTrackIndex();
     console.log("App.js Handle next track, think current index is: ", currentIndex);
     var indexToPlay = currentIndex + 1;
+    if (indexToPlay >= this.state.tracks.length) {
+      indexToPlay = 0;
+    }
+    console.log("Next index: " + indexToPlay);
     this._setTrackToIndex(indexToPlay);
   }
 
@@ -61,6 +70,9 @@ class App extends Component {
     var currentIndex = this._findCurrentTrackIndex();
     console.log("App.sj Handle prev track, think current index is: ", currentIndex);
     var indexToPlay = currentIndex - 1;
+    if (indexToPlay < 0) {
+      indexToPlay = this.state.tracks.length - 1;
+    }
     this._setTrackToIndex(indexToPlay);
   }
   _handleSelectTrack = (track) => {
@@ -101,19 +113,23 @@ class App extends Component {
             <h4>Search Results: {this.state.tracks.length}</h4>
           </div>
         </div>
-        <div className={this.state.showSearchResults ? '' : 'hidden'}>
-          <Media>
-            <MediaPlayer
-              tracks={this.state.tracks}
-              currentTime={this.state.currentTrack.clipStartTime}
-              currentTrack={this.state.currentTrack}
-              handleSelectTrack={this._handleSelectTrack}
-              handlePrevTrack={this._handlePrevTrack}
-              handleNextTrack={this._handleNextTrack}
-              apiHost={this.state.apiHost}
-            />
-          </Media>
+        <div className="min-page-height">
+        <span className='hidden'>Hello</span>
+          <div className={this.state.showSearchResults && this.state.tracks.length > 0 ? '' : 'hidden'}>
+            <Media>
+              <MediaPlayer
+                tracks={this.state.tracks}
+                currentTime={this.state.currentTrack.clipStartTime}
+                currentTrack={this.state.currentTrack}
+                handleSelectTrack={this._handleSelectTrack}
+                handlePrevTrack={this._handlePrevTrack}
+                handleNextTrack={this._handleNextTrack}
+                apiHost={this.state.apiHost}
+              />
+            </Media>
+          </div>
         </div>
+        <Footer />
       </div>
     );
   }

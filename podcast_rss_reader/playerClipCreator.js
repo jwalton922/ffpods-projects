@@ -49,6 +49,7 @@ exports.handler = async (event) => {
         let Parser = require('rss-parser');
         let parser = new Parser();
         let feed = await parser.parseURL(podcast.url);
+        var podcastLink = feed.link;
         var matchingItem = null;
         //get matching episode
         for (var j = 0; j < feed.items.length; j++) {
@@ -63,6 +64,7 @@ exports.handler = async (event) => {
             console.log("Could not match episode for key: " + key);
             return "Could not match episode for key";
         }
+        var episodeLink = item.link? item.link : podcastLink;
         console.log("Matched episode", matchingItem);
        
         var players = null;
@@ -109,9 +111,9 @@ exports.handler = async (event) => {
                 //check earlier words until we are before clipStartTime
                 for(var z = j-1; z >= 0; z--){                    
                     var earlierItem = items[z];
-                    if(earlierItem.type !== 'pronunciation'){
-                        continue;
-                    }
+                    // if(earlierItem.type !== 'pronunciation'){
+                    //     continue;
+                    // }
                     var earlierStartTime = Math.round(parseFloat(earlierItem.start_time));
                     if(earlierStartTime < clipStartTime){
                         break;
@@ -122,9 +124,9 @@ exports.handler = async (event) => {
                 //check later words until we after clipEndTime
                 for(var z = j+1; z < items.length; z++){                    
                     var laterItem = items[z];
-                    if(laterItem.type !== 'pronunciation'){
-                        continue;
-                    }
+                    // if(laterItem.type !== 'pronunciation'){
+                    //     continue;
+                    // }
                     var laterStartTime = Math.round(parseFloat(laterItem.start_time));
                     if(laterStartTime > clipEndTime){
                         break;
@@ -145,7 +147,9 @@ exports.handler = async (event) => {
                     pubDate: matchingItem.pubDate,
                     publishDate: date.getTime(),
                     currentDate: processDate.getTime(),
-                    image: feed.image.url
+                    image: feed.image.url,
+                    podcastLink: podcastLink,
+                    episodeLink: episodeLink
                 };
                 console.log("Output clip",playerClip);
                 numClips++;
@@ -187,14 +191,14 @@ exports.handler = async (event) => {
 //                 "s3SchemaVersion": "1.0",
 //                 "configurationId": "testConfigRule",
 //                 "bucket": {
-//                     "name": "ff-pods",
+//                     "name": "ff-pods-transcribe-output",
 //                     "ownerIdentity": {
 //                         "principalId": "EXAMPLE"
 //                     },
 //                     "arn": "arn:aws:s3:::ff-pods"
 //                 },
 //                 "object": {
-//                     "key": "Fantasy-Focus-Football-Week-4-Preview-.json",
+//                     "key": "Fantasy-Footballers-Fantasy-Football-Podcast-Starts-of-the-Week-Wk-6-Matchups-Dad-is-Back.json",
 //                     "size": 1024,
 //                     "eTag": "0123456789abcdef0123456789abcdef",
 //                     "sequencer": "0A1B2C3D4E5F678901"

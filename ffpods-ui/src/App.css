@@ -3,6 +3,10 @@
   margin-top:75px;
 }
 
+.min-page-height {
+  min-height: 600px;
+}
+
 .hidden {
   display: none;
 }

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import NavBar from './NavBar';
 import './Landing.css';
+import Footer from './Footer';
 import '../node_modules/react-responsive-carousel/lib/styles/carousel.css';
 import {
     Link
@@ -15,8 +16,7 @@ class Landing extends Component {
         // var api_host = 'http://localhost:3001/';
         var api_host = 'https://jrgrhzrkpb.execute-api.us-west-2.amazonaws.com/prod/';
         var sportOptions = [
-            { name: "Football", route: "football" },
-            { name: "Basketball", route: "basketball" }
+            { name: "Football", route: "football" }
         ]
         this.state = {
             sportOptions: sportOptions,
@@ -65,14 +65,14 @@ class Landing extends Component {
                 // search.setState({ options: retList, isLoading: false })
             });
     }
-    _carouselChange(e,arg) {
+    _carouselChange(e, arg) {
         // console.log("Carousel change", e);
         // console.log("Carousel second arg",arg);
         if (this.state.latestEpisodes) {
-            this.setState({ displayedPodcast: this.state.latestEpisodes[e],currentDisplayIndex: e });
-            
+            this.setState({ displayedPodcast: this.state.latestEpisodes[e], currentDisplayIndex: e });
+
         } else {
-            this.setState({currentDisplayIndex: e})
+            this.setState({ currentDisplayIndex: e })
         }
     }
     render() {
@@ -81,7 +81,7 @@ class Landing extends Component {
                 <div>
 
                     <header className="jumbotron my-4">
-                        <h1 className="display-3">Fantasy Sports Podcast Search</h1>
+                        <h1 className="display-3">Fantasy Sports Podcast Search Beta</h1>
                         <div className="row">
                             <div className="col-sm-6">
                                 <p className="lead">The best way to search for clips focused on your players from your favorite fantasy sports podcasts.</p>
@@ -96,7 +96,7 @@ class Landing extends Component {
                                 </p>
                                 <div className="row">
                                     <div className="col-xs-2">
-                                        <button className="btn btn-primary btn-lg">Start Searching</button>
+                                        <Link className="btn btn-primary btn-lg" to="/football">Start Searching</Link>
                                     </div>
                                     <div className="col-xs-2 ">
                                         <div className="input-group input-group-lg">
@@ -188,13 +188,7 @@ class Landing extends Component {
 
 
 
-                <footer className="py-5 bg-dark">
-                    <div className="container">
-                    <p className="m-0 text-center"><a href="mailto:admin@ffpodcastsearch.com">Contact us</a></p>
-                        <p className="m-0 text-center text-white">Copyright &copy; ffpodcastsearch.com 2018</p>
-                    </div>
-
-                </footer>
+               <Footer />
             </div>
 
 

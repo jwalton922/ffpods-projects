@@ -175,7 +175,7 @@ app.post('/playerClips', jsonParser, (req, res) => {
                     }
                 },
                 sort: [
-                    { "pubDate.keyword": "desc" },
+                    { "publishDate": "desc" },
                     { "podcast.raw": "desc" },
                     { "clipStartTime": "asc" },
                     "_score"
@@ -225,6 +225,6 @@ app.post('/playerClips', jsonParser, (req, res) => {
     });
 });
 //only for local...figure out how to switch on env
-app.listen(3001, () => console.log('Example app listening on port 3001!'))
+// app.listen(3001, () => console.log('Example app listening on port 3001!'))
 
 module.exports = app;

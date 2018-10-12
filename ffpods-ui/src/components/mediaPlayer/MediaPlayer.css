@@ -41,7 +41,9 @@
     flex-direction: column;
     width: 100%;
     max-width: 1440px;
-    margin-bottom: 24px; }
+    margin-bottom: 24px; 
+    min-height: 600px;
+  }
   
   .media-player {
     width: 100%;
