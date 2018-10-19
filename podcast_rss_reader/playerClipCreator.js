@@ -2,7 +2,7 @@ exports.handler = async (event) => {
     var elasticsearch = require('elasticsearch');
     let AWS = require('aws-sdk');
     var chain = new AWS.CredentialProviderChain();
-    var client = null; 
+    var client = null;
     chain.resolve(function (err, cred) {
         AWS.config.update({
             credentials: cred,
@@ -64,17 +64,17 @@ exports.handler = async (event) => {
             console.log("Could not match episode for key: " + key);
             return "Could not match episode for key";
         }
-        var episodeLink = item.link? item.link : podcastLink;
+        var episodeLink = item.link ? item.link : podcastLink;
         console.log("Matched episode", matchingItem);
-       
+
         var players = null;
         try {
             //get transcribe output from S3
-            const getPlayers = await s3.getObject({Bucket: 'ff-pods',Key: 'names.json'}).promise();
+            const getPlayers = await s3.getObject({ Bucket: 'ff-pods', Key: 'names.json' }).promise();
             var playerDataString = getPlayers.Body.toString();
-            players = JSON.parse(playerDataString);           
-        } catch(playerErr){
-            console.log("Error getting players json file",playerErr.stack);
+            players = JSON.parse(playerDataString);
+        } catch (playerErr) {
+            console.log("Error getting players json file", playerErr.stack);
             return "Could not get players";
         }
         try {
@@ -85,63 +85,37 @@ exports.handler = async (event) => {
             //get transcribe output from S3
             const getTranscribeOutput = await s3.getObject(getParams).promise();
             var dataString = getTranscribeOutput.Body.toString();
-            var data = JSON.parse(dataString);            
+            var data = JSON.parse(dataString);
             var items = data.results.items;
-            for(var j = 0; j < items.length; j++){
+            var podcastsByPlayer = {};
+            for (var j = 0; j < items.length; j++) {
                 var item = items[j];
-                if(item.type !== 'pronunciation'){
+                if (item.type !== 'pronunciation') {
                     continue;
                 }
                 var text = item.alternatives[0].content;
                 //see if word spoken was player
                 var matchingPlayer = null;
-                for(var k = 0; k < players.length; k++){
-                    if(players[k].term === text){
+                for (var k = 0; k < players.length; k++) {
+                    if (players[k].term === text) {
                         matchingPlayer = players[k];
                         break;
                     }
                 }
-                if(!matchingPlayer){
+                if (!matchingPlayer) {
                     continue;
                 }
-                console.log("Item: ",item);
-                var clipStartTime = Math.round(parseFloat(item.start_time))-5;
-                var clipEndTime = clipStartTime+30;                
-                var clipText = [matchingPlayer.name];
-                //check earlier words until we are before clipStartTime
-                for(var z = j-1; z >= 0; z--){                    
-                    var earlierItem = items[z];
-                    // if(earlierItem.type !== 'pronunciation'){
-                    //     continue;
-                    // }
-                    var earlierStartTime = Math.round(parseFloat(earlierItem.start_time));
-                    if(earlierStartTime < clipStartTime){
-                        break;
-                    }                    
-                    var earlierText = earlierItem.alternatives[0].content;
-                    clipText.unshift(earlierText);
-                }
-                //check later words until we after clipEndTime
-                for(var z = j+1; z < items.length; z++){                    
-                    var laterItem = items[z];
-                    // if(laterItem.type !== 'pronunciation'){
-                    //     continue;
-                    // }
-                    var laterStartTime = Math.round(parseFloat(laterItem.start_time));
-                    if(laterStartTime > clipEndTime){
-                        break;
-                    }                    
-                    var laterText = laterItem.alternatives[0].content;
-                    clipText.push(laterText);
-                }
-                var date= new Date(matchingItem.pubDate);
+                console.log("Item: ", item);
+                var clipStartTime = Math.round(parseFloat(item.start_time)) - 5;
+                var clipEndTime = clipStartTime + 30;
+
+                var date = new Date(matchingItem.pubDate);
                 var processDate = new Date();
                 var playerClip = {
                     podcast: podcast.name,
                     episodeTitle: matchingItem.title,
                     clipStartTime: clipStartTime,
-                    clipEndTime :clipEndTime,
-                    clipText:clipText.join(" "),
+                    clipEndTime: clipEndTime,                    
                     player: matchingPlayer.name,
                     clipUrl: matchingItem.enclosure.url,
                     pubDate: matchingItem.pubDate,
@@ -151,21 +125,82 @@ exports.handler = async (event) => {
                     podcastLink: podcastLink,
                     episodeLink: episodeLink
                 };
-                console.log("Output clip",playerClip);
+                console.log("Output clip", playerClip);
                 numClips++;
-                const response = await client.index({
-                    index: 'player_clips',
-                    type: 'playerClips',
-                    id: playerClip.player+"-"+playerClip.podcast+"-"+playerClip.episodeTitle+"-"+j,
-                    body: playerClip
-                  });
+                if (!podcastsByPlayer[playerClip.player]) {
+                    podcastsByPlayer[playerClip.player] = []
+                }
+                podcastsByPlayer[playerClip.player].push(playerClip);
+
+            } // end for looop podcast words
+            //try to merge clips, clips should already by sorted
+            var mergedClipsByPlayer = {};
+            var mergeCount = 0;
+            for (var player in podcastsByPlayer) {
+                mergedClipsByPlayer[player] = [];
+                var clips = podcastsByPlayer[player];
+                var currentClip = clips[0];
+                for (var i = 1; i < clips.length; i++) {
+                    var nextClip = clips[i];
+                    var delta = nextClip.clipEndTime - currentClip.clipEndTime;
+                    if (delta < 60) {
+                        currentClip.clipEndTime = nextClip.clipEndTime;
+                        console.log("Merging clip. Previous start time: "+currentClip.clipEndTime+" new end time: "+currentClip.clipEndTime);
+                        mergeCount++;
+                    } else {
+                        mergedClipsByPlayer[player].push(currentClip);
+                        currentClip = nextClip;
+                    }
+                }
+                mergedClipsByPlayer[player].push(currentClip);
             }
+            var endClipCount = 0;
+            for (var player in mergedClipsByPlayer) {
+                var clips = mergedClipsByPlayer[player];
+                
+                for (var i = 0; i < clips.length; i++) {
+                    endClipCount++;
+                    var clipText = [];
+                    var clipToIndex = clips[i];
+                    var clipStartTime = clipToIndex.clipStartTime;
+                    var clipEndTime = clipToIndex.clipEndTime;
+                    for (var z = 0; z < items.length; z++) {
+                        var startTime = Math.round(parseFloat(items[z].start_time));
+                        if (startTime < clipStartTime) {
+                            continue;
+                        } else if (startTime > clipEndTime) {
+                            break;
+                        } 
+                        if(!startTime){
+                            continue;
+                        }
+                        var text = items[z].alternatives[0].content;
+                       
+                        clipText.push(text);
+                    }
+                    
+                    
+                    clipToIndex.clipText = clipText.join(" ");
+                    clipToIndex.clipText = clipToIndex.clipText.replace(/-/g, " ");
+                    
+                    console.log("Indexing clip: "+endClipCount+" player: "+clipToIndex.player);
+                    console.log("Clip text: "+clipToIndex.clipText);
+                    const response = await client.index({
+                        index: 'player_clips',
+                        type: 'playerClips',
+                        id: clipToIndex.player + "-" + clipToIndex.podcast + "-" + clipToIndex.episodeTitle + "-" + i,
+                        body: clipToIndex
+                    });
+                }
+            }
+
+            console.log("Original clip size: " + numClips + ". Merged clips: " + mergeCount + '. End clip count: ' + endClipCount);
         } catch (err) {
-            console.log("Error getting transcribe output",err);
+            console.log("Error getting transcribe output", err);
         }
-       
+
     }
-    console.log("Number of clips created: "+numClips);
+    console.log("Number of clips created: " + numClips);
     return "Success";
 }
 
@@ -198,7 +233,7 @@ exports.handler = async (event) => {
 //                     "arn": "arn:aws:s3:::ff-pods"
 //                 },
 //                 "object": {
-//                     "key": "Fantasy-Footballers-Fantasy-Football-Podcast-Starts-of-the-Week-Wk-6-Matchups-Dad-is-Back.json",
+//                     "key": "Fantasy-Focus-Football-Week-7-Rankings.json",
 //                     "size": 1024,
 //                     "eTag": "0123456789abcdef0123456789abcdef",
 //                     "sequencer": "0A1B2C3D4E5F678901"

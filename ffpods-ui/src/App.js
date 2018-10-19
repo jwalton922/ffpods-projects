@@ -95,6 +95,8 @@ class App extends Component {
       track.startTime = startTime;
       track.episodeTitle = clip._source.episodeTitle;
       track.podcast = clip._source.podcast;
+      track.podcastLink = clip._source.podcastLink;
+      track.episodeLink = clip._source.episodeLink;
       var player = clip._source.player;
       track.text = track.text.replace(clip._source.player, "<b>" + clip._source.player + "</b>");
       tracks.push(track);

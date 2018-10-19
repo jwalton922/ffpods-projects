@@ -151,6 +151,9 @@ class MediaPlayer extends Component {
             <div className="media-player-wrapper">
                 <div className="media-player">
                     <div className="media-controls media-controls--full">
+                        <div classame="media-row">
+                            <span className={this.props.media.isLoading ? "" : "hidden"}>Loading<i className="fas fa-spinner fa-spin" /></span>
+                        </div>
                         <div className="media-row">
                             <CurrentTime className="media-control media-control--current-time" />
                             {this.props.currentTrack.label}
@@ -198,7 +201,7 @@ class MediaPlayer extends Component {
                         <tbody>
                             {this.props.tracks.map((track, i) =>
                                 <tr key={track.label + "_" + i}   >
-                                    <td><img width="128" src={track.podcastImage} /></td>
+                                    <td><a href={track.podcastLink} target="_blank"><img width="128" src={track.podcastImage} /></a></td>
                                     <td className={`media-playlist-track ${track === this.props.currentTrack ? 'is-active' : ''}`}
                                         onClick={this._handleTrackClick.bind(this, track)}>{track.startTime}</td>
                                     <td className={`media-playlist-track ${track === this.props.currentTrack ? 'is-active' : ''}`}
@@ -207,7 +210,7 @@ class MediaPlayer extends Component {
                                         onClick={this._handleTrackClick.bind(this, track)}>{track.episodeTitle}</td>
                                     <td className={`media-playlist-track ${track === this.props.currentTrack ? 'is-active' : ''}`}
                                         onClick={this._handleTrackClick.bind(this, track)}>{track.publishDate.toLocaleDateString()}</td>
-                                    <td>
+                                    <td className="media-playlist-track"> 
                                         <i className="fas fa-link" onClick={this._handleLinkClick.bind(this, track)}></i>                                       
                                         <TwitterShareButton
                                             url={"https://www.ffpodcastsearch.com/football?clipId="+encodeURIComponent(track.id)}
